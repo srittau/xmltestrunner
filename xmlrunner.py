@@ -7,7 +7,7 @@ XML Test Runner for PyUnit
 
 from __future__ import with_statement
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 import os.path
 import re
