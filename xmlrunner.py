@@ -17,6 +17,7 @@ import sys
 import time
 import traceback
 import unittest
+import unittest.util
 from xml.sax.saxutils import escape
 
 from io import StringIO, BytesIO
@@ -77,7 +78,7 @@ class _TestInfo(object):
         str_ = str if sys.version_info[0] >= 3 else unicode
         io_class = StringIO if sys.version_info[0] >= 3 else BytesIO
         text = escape(str_(error[1]))
-        class_name = _clsname(error[0])
+        class_name = unittest.util.strclass(error[0])
         stream.write('\n')
         stream.write('    <{tag} type="{class_}">{text}\n'.format(
             tag=tag_name, class_= class_name, text=text))
