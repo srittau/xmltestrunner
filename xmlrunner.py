@@ -263,7 +263,7 @@ class XMLTestRunnerTest(unittest.TestCase):
         """
         class TestTest(unittest.TestCase):
             pass
-        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.TestSuite" tests="0" time="0.000">
+        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.suite.TestSuite" tests="0" time="0.000">
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
@@ -277,7 +277,7 @@ class XMLTestRunnerTest(unittest.TestCase):
         class TestTest(unittest.TestCase):
             def test_foo(self):
                 pass
-        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.TestSuite" tests="1" time="0.000">
+        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.suite.TestSuite" tests="1" time="0.000">
   <testcase classname="__main__.TestTest" name="test_foo" time="0.000"></testcase>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
@@ -291,8 +291,8 @@ class XMLTestRunnerTest(unittest.TestCase):
         """
         class TestTest(unittest.TestCase):
             def test_foo(self):
-                self.assert_(False)
-        self._try_test_run(TestTest, """<testsuite errors="0" failures="1" name="unittest.TestSuite" tests="1" time="0.000">
+                self.assertTrue(False)
+        self._try_test_run(TestTest, """<testsuite errors="0" failures="1" name="unittest.suite.TestSuite" tests="1" time="0.000">
   <testcase classname="__main__.TestTest" name="test_foo" time="0.000">
     <failure type="exceptions.AssertionError">Foobar</failure>
   </testcase>
@@ -309,7 +309,7 @@ class XMLTestRunnerTest(unittest.TestCase):
         class TestTest(unittest.TestCase):
             def test_foo(self):
                 raise IndexError()
-        self._try_test_run(TestTest, """<testsuite errors="1" failures="0" name="unittest.TestSuite" tests="1" time="0.000">
+        self._try_test_run(TestTest, """<testsuite errors="1" failures="0" name="unittest.suite.TestSuite" tests="1" time="0.000">
   <testcase classname="__main__.TestTest" name="test_foo" time="0.000">
     <error type="exceptions.IndexError">Foobar</error>
   </testcase>
@@ -326,7 +326,7 @@ class XMLTestRunnerTest(unittest.TestCase):
         class TestTest(unittest.TestCase):
             def test_foo(self):
                 sys.stdout.write("Test\n")
-        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.TestSuite" tests="1" time="0.000">
+        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.suite.TestSuite" tests="1" time="0.000">
   <testcase classname="__main__.TestTest" name="test_foo" time="0.000"></testcase>
   <system-out><![CDATA[Test
 ]]></system-out>
@@ -342,7 +342,7 @@ class XMLTestRunnerTest(unittest.TestCase):
         class TestTest(unittest.TestCase):
             def test_foo(self):
                 sys.stderr.write("Test\n")
-        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.TestSuite" tests="1" time="0.000">
+        self._try_test_run(TestTest, """<testsuite errors="0" failures="0" name="unittest.suite.TestSuite" tests="1" time="0.000">
   <testcase classname="__main__.TestTest" name="test_foo" time="0.000"></testcase>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[Test
