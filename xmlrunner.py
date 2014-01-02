@@ -61,28 +61,29 @@ class _TestInfo(object):
         supplied stream.
 
         """
-        stream.write('  <testcase classname="%(class)s" name="%(method)s" time="%(time).4f">' % \
-            {
-                "class": self._class,
-                "method": self._method,
-                "time": self._time,
-            })
+        tag_template = ('  <testcase classname="{class_}" name="{method}" '
+                        'time="{time:.4f}">')
+        stream.write(tag_template.format(class_=self._class,
+                                         method=self._method,
+                                         time=self._time))
         if self._failure is not None:
             self._print_error(stream, 'failure', self._failure)
         if self._error is not None:
             self._print_error(stream, 'error', self._error)
         stream.write('</testcase>\n')
 
-    def _print_error(self, stream, tagname, error):
+    @staticmethod
+    def _print_error(stream, tag_name, error):
         """Print information from a failure or error to the supplied stream."""
         text = escape(str(error[1]))
+        class_name = _clsname(error[0])
         stream.write('\n')
-        stream.write('    <%s type="%s">%s\n' \
-            % (tagname, _clsname(error[0]), text))
+        stream.write('    <{tag} type="{class_}">{text}\n'.format(
+            tag=tag_name, class_= class_name, text=text))
         tb_stream = StringIO()
         traceback.print_tb(error[2], None, tb_stream)
         stream.write(escape(tb_stream.getvalue()))
-        stream.write('    </%s>\n' % tagname)
+        stream.write('    </{tag}>\n'.format(tag=tag_name))
         stream.write('  ')
 
 
@@ -98,9 +99,9 @@ class _XMLTestResult(unittest.TestResult):
 
     """
 
-    def __init__(self, classname):
+    def __init__(self, class_name):
         unittest.TestResult.__init__(self)
-        self._test_name = classname
+        self._test_name = class_name
         self._start_time = None
         self._tests = []
         self._error = None
@@ -138,18 +139,19 @@ class _XMLTestResult(unittest.TestResult):
         output and standard error streams must be passed in.a
 
         """
-        stream.write('<testsuite errors="%(e)d" failures="%(f)d" ' % \
-            { "e": len(self.errors), "f": len(self.failures) })
-        stream.write('name="%(n)s" tests="%(t)d" time="%(time).3f">\n' % \
-            {
-                "n": self._test_name,
-                "t": self.testsRun,
-                "time": time_taken,
-            })
+        tag_template = ('<testsuite errors="{errors}" failures="{failures}" '
+                        'name="{name}" tests="{total}" time="{time:.3f}">\n')
+        stream.write(tag_template.format(name=self._test_name,
+                                         total=self.testsRun,
+                                         errors=len(self.errors),
+                                         failures=len(self.failures),
+                                         time=time_taken))
         for info in self._tests:
             info.print_report(stream)
-        stream.write('  <system-out><![CDATA[%s]]></system-out>\n' % out)
-        stream.write('  <system-err><![CDATA[%s]]></system-err>\n' % err)
+        stream.write('  <system-out><![CDATA[{0}]]></system-out>\n'.format(
+            out))
+        stream.write('  <system-err><![CDATA[{0}]]></system-err>\n'.format(
+            err))
         stream.write('</testsuite>\n')
 
 
@@ -173,18 +175,18 @@ class XMLTestRunner(object):
     def run(self, test):
         """Run the given test case or test suite."""
         class_ = test.__class__
-        classname = class_.__module__ + "." + class_.__name__
-        if self._stream == None:
-            filename = "TEST-%s.xml" % classname
+        class_name = class_.__module__ + "." + class_.__name__
+        if self._stream is None:
+            filename = "TEST-{0}.xml".format(class_name)
             stream = open(os.path.join(self._path, filename), "w")
             stream.write('<?xml version="1.0" encoding="utf-8"?>\n')
         else:
             stream = self._stream
 
-        result = _XMLTestResult(classname)
+        result = _XMLTestResult(class_name)
         start_time = time.time()
 
-        with _fake_std_streams():
+        with _FakeStdStreams():
             test(result)
             try:
                 out_s = sys.stdout.getvalue()
@@ -205,14 +207,15 @@ class XMLTestRunner(object):
     def _set_path(self, path):
         self._path = path
 
-    path = property(lambda self: self._path, _set_path, None,
-            """The path where the XML files are stored.
+    path = property(
+        lambda self: self._path, _set_path, None,
+        """The path where the XML files are stored.
             
-            This property is ignored when the XML file is written to a file
-            stream.""")
+        This property is ignored when the XML file is written to a file
+        stream.""")
 
 
-class _fake_std_streams(object):
+class _FakeStdStreams(object):
 
     def __enter__(self):
         self._orig_stdout = sys.stdout
@@ -249,8 +252,10 @@ class XMLTestRunnerTest(unittest.TestCase):
         got = re.sub(r'time="\d+\.\d+"', 'time="0.000"', got)
         # Likewise, replace all failure and error messages by a simple "Foobar"
         # string.
-        got = re.sub(r'(?s)<failure (.*?)>.*?</failure>', r'<failure \1>Foobar</failure>', got)
-        got = re.sub(r'(?s)<error (.*?)>.*?</error>', r'<error \1>Foobar</error>', got)
+        got = re.sub(r'(?s)<failure (.*?)>.*?</failure>',
+                     r'<failure \1>Foobar</failure>', got)
+        got = re.sub(r'(?s)<error (.*?)>.*?</error>',
+                     r'<error \1>Foobar</error>', got)
         # And finally Python 3 compatibility.
         got = got.replace('type="builtins.', 'type="exceptions.')
 
