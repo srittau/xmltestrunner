@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 XML Test Runner for PyUnit
 """
@@ -5,7 +7,7 @@ XML Test Runner for PyUnit
 # Written by Sebastian Rittau <srittau@jroger.in-berlin.de> and placed in
 # the Public Domain. With contributions by Paolo Borelli and others.
 
-from __future__ import with_statement
+from __future__ import unicode_literals
 
 __version__ = "0.2"
 
@@ -17,10 +19,7 @@ import traceback
 import unittest
 from xml.sax.saxutils import escape
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO, BytesIO
 
 
 class _TestInfo(object):
@@ -75,14 +74,19 @@ class _TestInfo(object):
     @staticmethod
     def _print_error(stream, tag_name, error):
         """Print information from a failure or error to the supplied stream."""
-        text = escape(str(error[1]))
+        str_ = str if sys.version_info[0] >= 3 else unicode
+        io_class = StringIO if sys.version_info[0] >= 3 else BytesIO
+        text = escape(str_(error[1]))
         class_name = _clsname(error[0])
         stream.write('\n')
         stream.write('    <{tag} type="{class_}">{text}\n'.format(
             tag=tag_name, class_= class_name, text=text))
-        tb_stream = StringIO()
+        tb_stream = io_class()
         traceback.print_tb(error[2], None, tb_stream)
-        stream.write(escape(tb_stream.getvalue()))
+        tb_string = tb_stream.getvalue()
+        if sys.version_info[0] < 3:
+            tb_string = tb_string.decode("utf-8")
+        stream.write(escape(tb_string))
         stream.write('    </{tag}>\n'.format(tag=tag_name))
         stream.write('  ')
 
@@ -243,8 +247,7 @@ class XMLTestRunnerTest(unittest.TestCase):
 
         """
 
-        runner = XMLTestRunner(self._stream)
-        runner.run(unittest.makeSuite(test_class))
+        self._run_test_class(test_class)
 
         got = self._stream.getvalue()
         # Replace all time="X.YYY" attributes by time="0.000" to enable a
@@ -260,6 +263,10 @@ class XMLTestRunnerTest(unittest.TestCase):
         got = got.replace('type="builtins.', 'type="exceptions.')
 
         self.assertEqual(expected, got)
+
+    def _run_test_class(self, test_class):
+        runner = XMLTestRunner(self._stream)
+        runner.run(unittest.makeSuite(test_class))
 
     def test_no_tests(self):
         """Regression test: Check whether a test run without any tests
@@ -322,6 +329,13 @@ class XMLTestRunnerTest(unittest.TestCase):
   <system-err><![CDATA[]]></system-err>
 </testsuite>
 """)
+
+    def test_non_ascii_characters_in_traceback(self):
+        """Test umlauts in traceback exception messages."""
+        class TestTest(unittest.TestCase):
+            def test_foo(self):
+                raise Exception("Test äöü")
+        self._run_test_class(TestTest)
 
     def test_stdout_capture(self):
         """Regression test: Check whether a test run with output to stdout
