@@ -1,3 +1,7 @@
+> **Note:** This project is unmaintained. Use a more stable and mature
+project, like
+[unittest-xml-reporting](https://github.com/xmlrunner/unittest-xml-reporting).
+
 This is a test runner for the unittest module, Python's version of the xUnit
 framework. The test runner captures the test results in a XML file that is
 compatible with the XML output of JUnit. Various tools, like continuous
