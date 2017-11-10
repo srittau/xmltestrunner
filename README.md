@@ -5,11 +5,13 @@ integration servers can parse this output.
 
 Sample usage:
 
-    import unittest
+```python
+import unittest
 
-    from xmlrunner import XMLTestRunner
+from xmlrunner import XMLTestRunner
 
-    loader = unittest.TestLoader()
-    tests = loader.discover()
-    runner = XMLTestRunner()
-    runner.run(tests)
+loader = unittest.TestLoader()
+tests = loader.discover()
+runner = XMLTestRunner()
+runner.run(tests)
+```
